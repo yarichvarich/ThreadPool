@@ -21,7 +21,7 @@ set(
 set(
     THREAD_POOL_LIB
 
-    thread_pool
+    ThreadPool
 )
 
 add_executable(${PROJECT_NAME} ${SRC_FILES})

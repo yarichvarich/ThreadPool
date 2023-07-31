@@ -1,7 +1,7 @@
 #include <iostream>
 #include <chrono>
 
-#include "thread_pool/include/ThreadPool.hpp"
+#include "ThreadPool/include/ThreadPool.hpp"
 
 int main()
 {
@@ -10,7 +10,7 @@ int main()
     {
         ThreadPool pool{ 2u };
 
-        auto fut1 = pool.executeAsync(
+        /*auto fut1 = pool.executeAsync(
             []() -> uint32_t
             {
                 for (uint32_t i = 0u; i < 100u; ++i)
@@ -90,7 +90,7 @@ int main()
             }
         );
         
-        std::this_thread::sleep_for(1000ms);
+        std::this_thread::sleep_for(1000ms); */
 
         std::vector<ThreadPool::FunctionWrapper::Ptr> tasks;
 
@@ -108,7 +108,7 @@ int main()
             ThreadPool::FunctionWrapper::Ptr{new ThreadPool::FunctionWrapper(
                     []() -> void
                     {
-                        std::cout << "2st barrier function\n";
+                        std::cout << "2nd barrier function\n";
                     }
                 )
             }
@@ -118,13 +118,15 @@ int main()
             ThreadPool::FunctionWrapper::Ptr{new ThreadPool::FunctionWrapper(
                     []() -> void
                     {
-                        std::cout << "3st barrier function\n";
+                        std::cout << "3rd barrier function\n";
                     }
                 )
             }
         );
 
         pool.addTasksWithBarrier(std::move(tasks), ThreadPool::FunctionWrapper::Ptr{ new ThreadPool::FunctionWrapper{ []() -> void { std::cout << "onComplete!\n"; } } });
+
+        std::this_thread::sleep_for(1000ms);
     }
     std::cout << "Done execution!\n";
 

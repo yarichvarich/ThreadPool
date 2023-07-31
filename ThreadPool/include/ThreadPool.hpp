@@ -249,13 +249,17 @@ public:
 
             void increment()
             {
+                bool toDestroy = false;
+
                 {
                     std::lock_guard<std::mutex> lk{m_mut};
 
                     ++m_currentCount;
+
+                    toDestroy = m_currentCount == m_requiredCount;
                 }
 
-                if(m_currentCount == m_requiredCount - 1u)
+                if(toDestroy)
                 {
                     delete this;
                 }
