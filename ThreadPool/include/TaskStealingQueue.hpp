@@ -23,6 +23,8 @@ public:
 
     TaskStealingQueue& pushFront(T&& in_val);
 
+    bool tryPushFront(T&& in_val);
+
     bool tryPopFront(T& out_val);
 
     bool tryPopBack(T& out_val);

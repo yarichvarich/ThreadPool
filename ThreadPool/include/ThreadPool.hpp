@@ -208,9 +208,29 @@ public:
                 return result;
             }
 
+            template<typename F> ThreadPool::AsyncResult<F> tryAddTask(F&& func, bool& tryResult)
+            {
+                typedef typename std::result_of<F()>::type FunctionType;
+
+                std::packaged_task<FunctionType()> task{std::move(func)};
+
+                std::future<FunctionType> result{task.get_future()};
+
+                FunctionWrapper::Ptr wrappedTask{new FunctionWrapper{std::move(task)}};
+
+                tryResult = m_tasks->tryPushFront(std::move(wrappedTask));
+
+                return result;
+            }
+
             void addTask(FunctionWrapper::Ptr&& wrappedTask)
             {
                 m_tasks->pushFront(std::move(wrappedTask));
+            }
+
+            bool tryAddTask(FunctionWrapper::Ptr&& wrappedTask)
+            {
+                return m_tasks->tryPushFront(std::move(wrappedTask));
             }
 
             ~Worker()

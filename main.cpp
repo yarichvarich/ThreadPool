@@ -10,7 +10,7 @@ int main()
     {
         ThreadPool pool{ 2u };
 
-        /*auto fut1 = pool.executeAsync(
+        auto fut1 = pool.executeAsync(
             []() -> uint32_t
             {
                 for (uint32_t i = 0u; i < 100u; ++i)
@@ -90,7 +90,7 @@ int main()
             }
         );
         
-        std::this_thread::sleep_for(1000ms); */
+        std::this_thread::sleep_for(1000ms); 
 
         std::vector<ThreadPool::FunctionWrapper::Ptr> tasks;
 

@@ -6,6 +6,22 @@ template<typename F> ThreadPool::AsyncResult<F> ThreadPool::executeAsync(F&& fun
 
     workerID = (workerID + 1) % m_workers.size();
 
+    uint32_t K = 2u;
+
+    for(uint32_t i = 0; i < m_workers.size() * K; ++i)
+    {
+        uint32_t id = (workerID + i) % m_workers.size();
+        
+        bool result = false;
+
+        auto fut = m_workers[id]->tryAddTask(std::move(func), result);
+
+        if(result)
+        {
+            return fut;
+        }
+    }
+
     return m_workers[workerID]->addTask(std::move(func));
 }
 
@@ -31,6 +47,22 @@ void ThreadPool::executeAsync(FunctionWrapper::Ptr&& wrappedTask)
     uint32_t workerID = m_workerID.load();
 
     workerID = (workerID + 1) % m_workers.size();
+
+    uint32_t K = 2u;
+
+    for(uint32_t i = 0; i < m_workers.size() * K; ++i)
+    {
+        uint32_t id = (workerID + i) % m_workers.size();
+        
+        bool result = false;
+
+        result = m_workers[id]->tryAddTask(std::move(wrappedTask));
+
+        if(result)
+        {
+            return;
+        }
+    }
 
     m_workers[workerID]->addTask(std::move(wrappedTask));
 }
