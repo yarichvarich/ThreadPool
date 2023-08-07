@@ -1,14 +1,16 @@
 #include <iostream>
 #include <chrono>
 
-#include "ThreadPool/include/ThreadPool.hpp"
+#include "ThreadPool.hpp"
 
 int main()
 {
     using namespace std::chrono_literals;
 
     {
-        ThreadPool pool{ 2u };
+        ThreadPool pool{ 5u };
+
+        pool.wait();
 
         auto fut1 = pool.executeAsync(
             []() -> uint32_t
@@ -34,8 +36,16 @@ int main()
             }
         );
 
+        pool.resume();
+
         std::cout << fut2.get() << " " << fut1.get();
-        
+
+        pool.wait();
+
+        std::this_thread::sleep_for(5000ms);
+
+        pool.resume();
+
         ThreadPool::FunctionWrapper::Ptr taskChain{
             new ThreadPool::FunctionWrapper{
                 []() -> uint32_t

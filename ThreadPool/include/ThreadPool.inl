@@ -74,6 +74,13 @@ void ThreadPool::wait()
 
 void ThreadPool::resume()
 {
+    while(workersBusy())
+    {
+        std::cout << "busy\n";
+
+        std::this_thread::yield();
+    }
+
     m_paused = false;
 
     m_cv.notify_all();

@@ -25,4 +25,15 @@ set(
     ThreadPool
 )
 
+set(
+    ThreadPool_DIR
+
+    ./ThreadPool/include
+)
+
+find_package(ThreadPool CONFIG REQUIRED)
+
 add_executable(${PROJECT_NAME} ${SRC_FILES})
+target_link_libraries(${PROJECT_NAME} ThreadPool::ThreadPool)
+
+install(TARGETS ${PROJECT_NAME} DESTINATION ./bin)

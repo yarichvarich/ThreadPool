@@ -113,6 +113,8 @@ public:
 
             std::atomic<bool> m_done;
 
+            bool m_busy = false;
+
             std::unique_ptr<std::thread> m_thread;
 
         public:
@@ -171,6 +173,12 @@ public:
             {
                 while(!m_poolPtr->m_done)
                 {
+                    std::unique_lock<std::mutex> lk{m_poolPtr->m_mut};
+
+                    m_poolPtr->m_cv.wait(lk, [this]()->bool { return !m_poolPtr->m_paused; });
+
+                    m_busy = true;
+
                     FunctionWrapper::Ptr task{};
                     
                     if(popFromLocalQueue(task))
@@ -185,12 +193,19 @@ public:
                     {
                         std::this_thread::yield();
                     }
+
+                    m_busy = false;
                 }
             }
 
             bool done()
             {
                 return m_done.load();
+            }
+
+            bool busy()
+            {
+                return m_busy;
             }
 
             template<typename F> ThreadPool::AsyncResult<F> addTask(F&& func)
@@ -287,6 +302,24 @@ public:
     };
 
 private:
+
+    bool workersBusy()
+    {
+        if(!m_paused.load())
+        {
+            return true;
+        }
+
+        for(auto& pWorker : m_workers)
+        {
+            if(pWorker->busy())
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     std::mutex m_mut;
 
