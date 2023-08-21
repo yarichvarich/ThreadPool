@@ -76,8 +76,6 @@ void ThreadPool::resume()
 {
     while(workersBusy())
     {
-        std::cout << "busy\n";
-
         std::this_thread::yield();
     }
 
@@ -111,4 +109,22 @@ void ThreadPool::addTasksWithBarrier(std::vector<FunctionWrapper::Ptr>&& tasks, 
 ThreadPool::~ThreadPool()
 {
     m_done = true;
+}
+
+bool ThreadPool::workersBusy()
+{
+    if(!m_paused.load())
+    {
+        return true;
+    }
+
+    for(auto& pWorker : m_workers)
+    {
+        if(pWorker->busy())
+        {
+            return true;
+        }
+    }
+
+    return false;
 }

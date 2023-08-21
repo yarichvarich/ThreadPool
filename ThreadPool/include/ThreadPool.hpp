@@ -82,6 +82,7 @@ public:
             }
 
             FunctionWrapper(const FunctionWrapper& other) = delete;
+
             FunctionWrapper& operator=(const FunctionWrapper& other) = delete;
 
             void operator()() 
@@ -99,7 +100,7 @@ public:
 
     template<typename F> using AsyncResult = std::future<typename std::result_of<F()>::type>;
 
-    template<typename F> using AsyncResultAndFuncWrapper = std::pair<typename AsyncResult<F>, FunctionWrapper::Ptr*>;
+    template<typename F> using AsyncResultAndFuncWrapper = std::pair<AsyncResult<F>, FunctionWrapper::Ptr*>;
 
     class Worker
     {
@@ -303,23 +304,8 @@ public:
 
 private:
 
-    bool workersBusy()
-    {
-        if(!m_paused.load())
-        {
-            return true;
-        }
+    bool workersBusy();
 
-        for(auto& pWorker : m_workers)
-        {
-            if(pWorker->busy())
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     std::mutex m_mut;
 
