@@ -37,8 +37,6 @@ template<typename F> ThreadPool::AsyncResultAndFuncWrapper<F> ThreadPool::chainT
 
     inoutPreviousTask->then() = std::move(wrappedTask);
 
-    ThreadPool::AsyncResultAndFuncWrapper<F> res;
-
     return {std::move(result), &inoutPreviousTask->then()};
 }
 
@@ -84,7 +82,7 @@ void ThreadPool::resume()
     m_cv.notify_all();
 }
 
-ThreadPool::ThreadPool(uint32_t numThreads) : m_done{false}, m_paused{false}, m_workerID{0u}
+ThreadPool::ThreadPool(uint32_t numThreads) : m_done{false}, m_paused{true}, m_workerID{0u}
 {
     DEBUG_ASSERT(numThreads <= std::thread::hardware_concurrency());
 
@@ -92,6 +90,28 @@ ThreadPool::ThreadPool(uint32_t numThreads) : m_done{false}, m_paused{false}, m_
     {
         m_workers.push_back(std::unique_ptr<Worker>{new Worker{workerIndex, this, &Worker::run}});
     }
+}
+
+template<typename F> ThreadPool::AsyncResult<F> ThreadPool::addTasksWithBarrier(std::vector<FunctionWrapper::Ptr>&& tasks, F&& onComplete)
+{
+    typedef typename std::result_of<F()>::type FunctionType;
+
+    std::packaged_task<FunctionType()> task{std::move(onComplete)};
+
+    std::future<FunctionType> result{task.get_future()};
+
+    FunctionWrapper::Ptr wrappedTask{new FunctionWrapper{std::move(task)}};
+
+    Barrier* barrier = new Barrier{static_cast<uint32_t>(tasks.size()), std::move(wrappedTask)};
+
+    for(auto& task0 : tasks)
+    {
+        task0->barrier() = barrier;
+
+        executeAsync(std::move(task0)); 
+    }
+
+    return result;
 }
 
 void ThreadPool::addTasksWithBarrier(std::vector<FunctionWrapper::Ptr>&& tasks, FunctionWrapper::Ptr&& onComplete)
@@ -108,7 +128,11 @@ void ThreadPool::addTasksWithBarrier(std::vector<FunctionWrapper::Ptr>&& tasks, 
 
 ThreadPool::~ThreadPool()
 {
-    m_done = true;
+    std::unique_lock<std::mutex> lk{m_workerMut};
+    for(auto& worker : m_workers)
+    {
+        worker->m_done = true;
+    }
 }
 
 bool ThreadPool::workersBusy()

@@ -150,6 +150,15 @@ public:
                 for(uint32_t i = 0; i < m_poolPtr->m_workers.size(); ++i)
                 {
                     uint32_t stealFromID = (m_threadId + 1 + i) % m_poolPtr->m_workers.size();
+                    
+                    {
+                        std::unique_lock lk{m_poolPtr->m_workerMut};
+
+                        if(!m_poolPtr->m_workers[stealFromID])
+                        {
+                            return false;
+                        }
+                    }
 
                     if(m_poolPtr->m_workers[stealFromID]->trySteal(task))
                     {
@@ -172,7 +181,7 @@ public:
 
             void run()
             {
-                while(!m_poolPtr->m_done)
+                while(!m_done)
                 {
                     std::unique_lock<std::mutex> lk{m_poolPtr->m_mut};
 
@@ -202,6 +211,11 @@ public:
             bool done()
             {
                 return m_done.load();
+            }
+
+            void finishWork()
+            {
+                m_done = true;
             }
 
             bool busy()
@@ -255,6 +269,8 @@ public:
 
                 m_thread->join();
             }
+
+            friend class ThreadPool;
     };
 
     class Barrier
@@ -304,9 +320,6 @@ public:
 
 private:
 
-    bool workersBusy();
-
-
     std::mutex m_mut;
 
     std::condition_variable m_cv;
@@ -318,6 +331,8 @@ private:
     std::atomic<uint32_t> m_workerID;
 
     std::vector<std::unique_ptr<Worker>> m_workers;
+
+    std::mutex m_workerMut;
 
 public:
 
@@ -331,11 +346,15 @@ public:
 
     template<typename F> AsyncResultAndFuncWrapper<F> chainTask(F&& func, FunctionWrapper::Ptr& inoutPreviousTask);
 
+    template<typename F> AsyncResult<F> addTasksWithBarrier(std::vector<FunctionWrapper::Ptr>&& tasks, F&& func);
+
     void addTasksWithBarrier(std::vector<FunctionWrapper::Ptr>&& tasks, FunctionWrapper::Ptr&& onComplete);
 
     void wait();
 
     void resume();
+
+    bool workersBusy();
 
     ~ThreadPool();
 

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <chrono>
 
-#include "ThreadPool.hpp"
+#include <ThreadPool.hpp>
 
 int main()
 {
@@ -9,9 +9,12 @@ int main()
 
     {
         ThreadPool pool{ 5u };
-
+        // setting pool into wait state
         pool.wait();
 
+        std::this_thread::sleep_for(10000ms);
+
+        // pushing lambda into pool`s task queue
         auto fut1 = pool.executeAsync(
             []() -> uint32_t
             {
@@ -24,6 +27,7 @@ int main()
             }
         );
 
+        // pushing lambda into pool`s task queue
         auto fut2 = pool.executeAsync(
             []() -> uint32_t
             {
@@ -35,17 +39,21 @@ int main()
                 return 20u;
             }
         );
-
+        
+        // setting pool into running state
         pool.resume();
-
+        /*
+        // wait until task1 and task2 are done
+        
         std::cout << fut2.get() << " " << fut1.get();
-
+        
         pool.wait();
 
         std::this_thread::sleep_for(5000ms);
 
         pool.resume();
 
+        // creating first node in taksChain
         ThreadPool::FunctionWrapper::Ptr taskChain{
             new ThreadPool::FunctionWrapper{
                 []() -> uint32_t
@@ -60,6 +68,7 @@ int main()
             }
         };
 
+        // adding node to task chain
         auto pairedResult = pool.chainTask(
             []() -> uint32_t
             {
@@ -86,6 +95,7 @@ int main()
             *pairedResult.second
         );
 
+        // pushing taskChain into task queue
         pool.executeAsync(std::move(taskChain));
 
         auto fut5 = pool.executeAsync(
@@ -102,6 +112,7 @@ int main()
         
         std::this_thread::sleep_for(1000ms); 
 
+        // creating list of tasks
         std::vector<ThreadPool::FunctionWrapper::Ptr> tasks;
 
         tasks.push_back(
@@ -134,9 +145,12 @@ int main()
             }
         );
 
-        pool.addTasksWithBarrier(std::move(tasks), ThreadPool::FunctionWrapper::Ptr{ new ThreadPool::FunctionWrapper{ []() -> void { std::cout << "onComplete!\n"; } } });
+        // onComplete will be executed right after execution of task list
+        pool.addTasksWithBarrier(std::move(tasks), 
+            []() -> void { std::cout << "onComplete!\n"; }
+        );
 
-        std::this_thread::sleep_for(1000ms);
+        std::this_thread::sleep_for(1000ms);*/
     }
     std::cout << "Done execution!\n";
 
