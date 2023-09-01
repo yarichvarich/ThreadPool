@@ -114,7 +114,7 @@ public:
 
             std::atomic<bool> m_done;
 
-            bool m_busy = false;
+            std::atomic<bool> m_busy = false;
 
             std::unique_ptr<std::thread> m_thread;
 
@@ -147,7 +147,7 @@ public:
 
             bool popFromOtherWorker(FunctionWrapper::Ptr& task)
             {
-                for(uint32_t i = 0; i < m_poolPtr->m_workers.size(); ++i)
+                for(uint32_t i = 0; i < m_poolPtr->m_workers.size() * 1.5f; ++i)
                 {
                     uint32_t stealFromID = (m_threadId + 1 + i) % m_poolPtr->m_workers.size();
                     
@@ -225,13 +225,9 @@ public:
 
             template<typename F> ThreadPool::AsyncResult<F> addTask(F&& func)
             {
-                typedef typename std::result_of<F()>::type FunctionType;
-
-                std::packaged_task<FunctionType()> task{std::move(func)};
-
-                std::future<FunctionType> result{task.get_future()};
-
-                FunctionWrapper::Ptr wrappedTask{new FunctionWrapper{std::move(task)}};
+                FunctionWrapper::Ptr wrappedTask;
+                
+                auto result = ThreadPool::wrapTask(func, wrappedTask);
 
                 m_tasks->pushFront(std::move(wrappedTask));
 
@@ -240,13 +236,9 @@ public:
 
             template<typename F> ThreadPool::AsyncResult<F> tryAddTask(F&& func, bool& tryResult)
             {
-                typedef typename std::result_of<F()>::type FunctionType;
-
-                std::packaged_task<FunctionType()> task{std::move(func)};
-
-                std::future<FunctionType> result{task.get_future()};
-
-                FunctionWrapper::Ptr wrappedTask{new FunctionWrapper{std::move(task)}};
+                FunctionWrapper::Ptr wrappedTask;
+                
+                auto result = ThreadPool::wrapTask(func, wrappedTask);
 
                 tryResult = m_tasks->tryPushFront(std::move(wrappedTask));
 
@@ -355,6 +347,8 @@ public:
     void resume();
 
     bool workersBusy();
+
+    template<typename F> static ThreadPool::AsyncResult<F> wrapTask(F&& func, FunctionWrapper::Ptr& outWrappedTask);
 
     ~ThreadPool();
 

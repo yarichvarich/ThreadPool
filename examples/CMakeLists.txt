@@ -6,23 +6,23 @@ set(CMAKE_CXX_STANDART 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+
 add_compile_options(
     $<$<CXX_COMPILER_ID:Clang>:/fsanitize=address,undefined,thread>
-    $<$<CXX_COMPILER_ID:GNU>:-fsanitize=undefined,thread>
+    $<$<CXX_COMPILER_ID:GNU>:-fsanitize=undefined>
     $<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO,/fsanitize=address,undefined,thread,/Zi>
     $<$<CXX_COMPILER_ID:Intel>:/fsanitize=address,undefined,thread>
 )
 
 add_link_options(
     $<$<CXX_COMPILER_ID:Clang>:/fsanitize=address,undefined,thread>
-    $<$<CXX_COMPILER_ID:GNU>:-fsanitize=undefined,thread>
+    $<$<CXX_COMPILER_ID:GNU>:-fsanitize=undefined>
     $<$<CXX_COMPILER_ID:MSVC>:/INCREMENTAL:NO,/fsanitize=address,undefined,thread,/Zi>
     $<$<CXX_COMPILER_ID:Intel>:/fsanitize=address,undefined,thread>
 )
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 set(
     ThreadPool_DIR

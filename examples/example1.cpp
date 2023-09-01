@@ -42,7 +42,7 @@ int main()
         
         // setting pool into running state
         pool.resume();
-        /*
+        
         // wait until task1 and task2 are done
         
         std::cout << fut2.get() << " " << fut1.get();
@@ -150,7 +150,7 @@ int main()
             []() -> void { std::cout << "onComplete!\n"; }
         );
 
-        std::this_thread::sleep_for(1000ms);*/
+        std::this_thread::sleep_for(1000ms);
     }
     std::cout << "Done execution!\n";
 

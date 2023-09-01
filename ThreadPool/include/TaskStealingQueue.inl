@@ -29,9 +29,9 @@ template<typename T> bool TaskStealingQueue<T>::tryPushFront(T&& in_val)
 
 template<typename T> bool TaskStealingQueue<T>::tryPopFront(T& out_val)
 {
-    std::unique_lock<std::mutex> lk{m_mutex, std::try_to_lock};
+    std::unique_lock<std::mutex> lk{m_mutex};
 
-    if(m_queue.empty() || !lk) 
+    if(m_queue.empty()) 
     {
         return false;
     }
