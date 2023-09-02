@@ -150,14 +150,10 @@ public:
                 for(uint32_t i = 0; i < m_poolPtr->m_workers.size() * 1.5f; ++i)
                 {
                     uint32_t stealFromID = (m_threadId + 1 + i) % m_poolPtr->m_workers.size();
-                    
-                    {
-                        std::unique_lock lk{m_poolPtr->m_workerMut};
 
-                        if(!m_poolPtr->m_workers[stealFromID])
-                        {
-                            return false;
-                        }
+                    if(!m_poolPtr->m_workers[stealFromID])
+                    {
+                        return false;
                     }
 
                     if(m_poolPtr->m_workers[stealFromID]->trySteal(task))
@@ -323,8 +319,6 @@ private:
     std::atomic<uint32_t> m_workerID;
 
     std::vector<std::unique_ptr<Worker>> m_workers;
-
-    std::mutex m_workerMut;
 
 public:
 

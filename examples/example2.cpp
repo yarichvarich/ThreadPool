@@ -477,8 +477,6 @@ void Application::run()
 
                 MandelbrotNavigator::zoomIntoPoint(mandelbrotXY.first, mandelbrotXY.second);
 
-                s_instance->m_windowPixelBuffer.saveToFile("./img.png");
-
                 toRender = true;
             }
 
